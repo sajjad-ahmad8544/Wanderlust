@@ -1,0 +1,156 @@
+<% layout("/layouts/boilerplate") %>
+    <style>
+       #filters {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+       } 
+       .filter{
+        text-align: center;
+        margin-right: 2rem;
+        margin-top: 2rem;
+        opacity: 0.7;
+       }
+       .filter:hover{
+        opacity: 1;
+        cursor: pointer;
+       }
+       .filter p {
+        font-size: 0.8rem;
+       }
+       .tax-info {
+        display: none;
+       }
+       .tax-toggle {
+        border: 1px solid black;
+        border-radius: 1rem;
+        height: 3.25rem;
+        padding: 1rem;
+        margin-left: 2rem;
+        display: flex;
+        align-items: center;
+       }
+    </style>
+    <div id="filters">
+        <div class="filter" data-category="trending">
+           <div><i class="fa-solid fa-fire"></i></div>
+            <p>Trending</p>
+        </div>
+        <div class="filter" data-category="rooms">
+           <div><i class="fa-solid fa-bed"></i></div>
+            <p>Rooms</p>
+        </div>
+        <div class="filter" data-category="iconic-cities">
+           <div><i class="fa-solid fa-mountain-city"></i></div>
+            <p>Iconic Cities</p>
+        </div>
+        <div class="filter" data-category="mountains">
+           <div><i class="fa-solid fa-mountain"></i></div>
+            <p>Mountains</p>
+        </div>
+        <div class="filter" data-category="castles">
+           <div><i class="fa-brands fa-fort-awesome"></i></div>
+            <p>Castles</p>
+        </div>
+        <div class="filter" data-category="amazing-pools">
+           <div><i class="fa-solid fa-person-swimming"></i></div>
+            <p>Amazing Pools</p>
+        </div>
+        <div class="filter" data-category="camping">
+           <div><i class="fa-solid fa-campground"></i></div>
+            <p>Camping</p>
+        </div>
+        <div class="filter" data-category="farms">
+           <div><i class="fa-solid fa-cow"></i></div>
+            <p>Farms</p>
+        </div>
+        <div class="filter" data-category="arctic">
+           <div><i class="fa-solid fa-snowflake"></i></div>
+            <p>Arctic</p>
+        </div>
+        <div class="filter" data-category="domes">
+           <div><i class="fa-solid fa-igloo"></i></div>
+            <p>Domes</p>
+        </div>
+        <div class="filter" data-category="boats">
+           <div><i class="fa-solid fa-ship"></i></div>
+            <p>Boats</p>
+        </div>
+        <div class="tax-toggle">
+            <div class="form-check-reverse form-switch">
+               <input class="form-check-input" type="checkbox" role="switch" id="flexswitchCheckDefault">
+               <label class="form-check-label" for="flexswitchCheckDefault">Display total after taxes</label>
+            </div>
+        </div>
+    </div>
+    <% if (search) { %>
+      <% if (allListings.length > 0) { %>
+        <div class="alert alert-success mt-4">
+          Found <strong><%= allListings.length %></strong> result(s) for "<%= search %>"
+        </div>
+      <% } else { %>
+        <div class="alert alert-warning mt-4">
+          No listings found for "<%= search %>". Try another destination like <strong>Malibu</strong>, <strong>Aspen</strong>, <strong>Bali</strong>, or <strong>United States</strong>.
+        </div>
+      <% } %>
+    <% } %>
+
+    <div class="row row-cols-lg-3 row-cols-md-2 row-cols-sm-1 mt-3">
+      <% if (allListings.length === 0) { %>
+        <div class="col-12 text-center py-5">
+          <h4>Listing not available.</h4>
+          <p>Try another search term or visit the listings page again.</p>
+        </div>
+      <% } %>
+      <% for(let listing of allListings) { %>
+        <a href="/listings/<%= listing._id %>" class="listing-link">
+          <div class="card col listing-card">
+            <img src="<%= listing.image.url %>" class="card-img-top" alt="listing-image" style="height: 20rem;">
+            <div class="card-img-overlay"></div>
+            <div class="card-body">
+              <p class="card-text">
+                <b><%= listing.title %></b> <br>
+                &#8377;<%= listing.price.toLocaleString('en-IN') %>/night
+                <i class="tax-info">&nbsp; &nbsp; +18% GST</i>
+              </p>
+            </div>
+          </div>
+        </a>
+      <% } %>
+    </div>
+
+<script>
+    const taxSwitch = document.getElementById("flexswitchCheckDefault");
+    if (taxSwitch) {
+      taxSwitch.addEventListener("click", () => {
+        const taxInfo = document.getElementsByClassName("tax-info");
+        for (const info of taxInfo) {
+            if (info.style.display !== "inline") {
+                info.style.display = "inline";
+            } else {
+                info.style.display = "none";
+            }
+        }
+      });
+    }
+</script>
+
+<script>
+
+  const filters = document.querySelectorAll(".filter");
+
+  filters.forEach((filter) => {
+
+    filter.addEventListener("click", () => {
+
+      const category =
+      filter.dataset.category;
+
+      window.location.href =
+      `/listings?category=${category}`;
+
+    });
+
+  });
+
+</script>
