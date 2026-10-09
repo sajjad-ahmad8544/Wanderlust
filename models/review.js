@@ -1,4 +1,3 @@
-const { types } = require("joi");
 const mongoose = require("mongoose");
 const Schema = mongoose.Schema;
 
@@ -14,8 +13,8 @@ const reviewSchema = new Schema({
         required: true,
     },
     createdAt:{
-             type: Date,
-             default: Date.now(),
+        type: Date,
+        default: Date.now,   // pehle Date.now() tha -> sab reviews ki date same hoti thi
     },
     author: {
         type: Schema.Types.ObjectId,

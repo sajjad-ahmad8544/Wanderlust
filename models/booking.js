@@ -1,97 +1,50 @@
-const express = require("express");
+const mongoose = require("mongoose");
+const Schema = mongoose.Schema;
 
-const router =
-express.Router({ mergeParams: true });
+const bookingSchema = new Schema({
+    listing: {
+        type: Schema.Types.ObjectId,
+        ref: "Listing",
+        required: true,
+    },
+    user: {
+        type: Schema.Types.ObjectId,
+        ref: "User",
+        required: true,
+    },
+    checkIn: {
+        type: Date,
+        required: true,
+    },
+    checkOut: {
+        type: Date,
+        required: true,
+    },
+    guests: {
+        type: Number,
+        required: true,
+        min: 1,
+    },
+    totalPrice: {
+        type: Number,
+        required: true,
+    },
+    status: {
+        type: String,
+        enum: ["pending", "confirmed", "cancelled"],
+        default: "pending",
+    },
+    // Razorpay order created on the server (order_xxx)
+    razorpayOrderId: {
+        type: String,
+    },
+    // Razorpay payment id (pay_xxx), set after successful verification
+    paymentId: {
+        type: String,
+    },
+    refundId: {
+        type: String,
+    },
+}, { timestamps: true });
 
-const Booking =
-require("../models/booking");
-
-const Listing =
-require("../models/listing");
-
-const { isLoggedIn } =
-require("../middleware");
-
-
-// CREATE BOOKING
-router.post(
-  "/",
-  isLoggedIn,
-  async (req, res) => {
-
-    const { id } = req.params;
-
-    const listing =
-    await Listing.findById(id);
-
-    const {
-      checkIn,
-      checkOut,
-      guests,
-    } = req.body;
-
-    // TOTAL DAYS
-    const days =
-    Math.ceil(
-      (
-        new Date(checkOut) -
-        new Date(checkIn)
-      ) /
-      (1000 * 60 * 60 * 24)
-    );
-
-    // TOTAL PRICE
-    const totalPrice =
-    days * listing.price;
-
-    // CREATE BOOKING
-    const booking =
-    new Booking({
-
-      listing: listing._id,
-
-      user: req.user._id,
-
-      checkIn,
-
-      checkOut,
-
-      guests,
-
-      totalPrice,
-
-    });
-
-    await booking.save();
-
-    req.flash(
-      "success",
-      "Booking Confirmed!"
-    );
-
-    res.redirect(
-      `/listings/${id}`
-    );
-  }
-);
-
-
-// MY BOOKINGS
-router.get(
-  "/my-bookings",
-  isLoggedIn,
-  async (req, res) => {
-
-    const bookings =
-    await Booking.find({
-      user: req.user._id,
-    }).populate("listing");
-
-    res.render(
-      "listings/bookings.ejs",
-      { bookings }
-    );
-  }
-);
-
-module.exports = router;
+module.exports = mongoose.model("Booking", bookingSchema);

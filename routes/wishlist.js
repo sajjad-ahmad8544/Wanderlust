@@ -1,90 +1,55 @@
 const express = require("express");
-
 const router = express.Router();
 
 const User = require("../models/user");
-
 const Listing = require("../models/listing");
-
+const wrapAsync = require("../utils/wrapAsync.js");
 const { isLoggedIn } = require("../middleware");
-
 
 // ADD TO WISHLIST
 router.post(
   "/:id",
   isLoggedIn,
-  async (req, res) => {
-
-    const listing =
-    await Listing.findById(req.params.id);
-
-    const user =
-    await User.findById(req.user._id);
-
-    // CHECK ALREADY EXISTS
-    if (
-      !user.wishlist.includes(listing._id)
-    ) {
-
-      user.wishlist.push(listing._id);
-
-      await user.save();
+  wrapAsync(async (req, res) => {
+    const listing = await Listing.findById(req.params.id);
+    if (!listing) {
+      req.flash("error", "Listing not found");
+      return res.redirect("/listings");
     }
 
-    req.flash(
-      "success",
-      "Added to wishlist!"
-    );
+    // $addToSet = duplicate nahi banega
+    await User.findByIdAndUpdate(req.user._id, {
+      $addToSet: { wishlist: listing._id },
+    });
 
-    res.redirect(
-      `/listings/${listing._id}`
-    );
-  }
+    req.flash("success", "Added to wishlist!");
+    res.redirect(`/listings/${listing._id}`);
+  })
 );
-
 
 // SHOW WISHLIST
 router.get(
   "/",
   isLoggedIn,
-  async (req, res) => {
-
-    const user =
-    await User.findById(req.user._id)
-      .populate("wishlist");
-
-    res.render(
-      "listings/wishlist.ejs",
-      {
-        wishlist: user.wishlist,
-      }
-    );
-  }
+  wrapAsync(async (req, res) => {
+    const user = await User.findById(req.user._id).populate("wishlist");
+    const wishlist = (user.wishlist || []).filter(Boolean);
+    res.render("listings/wishlist.ejs", { wishlist });
+  })
 );
-
 
 // REMOVE FROM WISHLIST
 router.delete(
   "/:id",
   isLoggedIn,
-  async (req, res) => {
+  wrapAsync(async (req, res) => {
+    await User.findByIdAndUpdate(req.user._id, {
+      $pull: { wishlist: req.params.id },
+    });
 
-    await User.findByIdAndUpdate(
-      req.user._id,
-      {
-        $pull: {
-          wishlist: req.params.id,
-        },
-      }
-    );
-
-    req.flash(
-      "success",
-      "Removed from wishlist"
-    );
-
+    req.flash("success", "Removed from wishlist");
     res.redirect("/wishlist");
-  }
+  })
 );
 
 module.exports = router;

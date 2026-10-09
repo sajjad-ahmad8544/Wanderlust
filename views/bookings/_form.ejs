@@ -1,0 +1,38 @@
+<div class="card p-4 mt-4 shadow border-0 rounded-4" style="max-width: 360px; background: #fff; z-index: 10; position: relative;">
+  
+  <div class="d-flex justify-content-between align-items-baseline mb-3">
+    <div>
+      <span class="fs-3 fw-bold text-dark">₹<%= listing.price.toLocaleString("en-IN") %></span>
+      <span class="text-muted small"> / night</span>
+    </div>
+  </div>
+
+  <form action="/listings/<%= listing._id %>/bookings" method="POST" novalidate class="needs-validation">
+    
+    <div class="border rounded-3 overflow-hidden mb-3" style="border-color: #ced4da !important;">
+      
+      <div class="d-flex border-bottom" style="border-color: #ced4da !important;">
+        <div class="p-2 w-50 border-end" style="border-color: #ced4da !important;">
+          <label for="checkIn" class="form-label text-uppercase fw-bold m-0" style="font-size: 0.65rem; color: #222;">Check-in</label>
+          <input type="date" class="form-control border-0 p-0 shadow-none text-muted small mt-1" id="checkIn" name="booking[checkIn]" required style="background: transparent;">
+        </div>
+        <div class="p-2 w-50">
+          <label for="checkOut" class="form-label text-uppercase fw-bold m-0" style="font-size: 0.65rem; color: #222;">Check-out</label>
+          <input type="date" class="form-control border-0 p-0 shadow-none text-muted small mt-1" id="checkOut" name="booking[checkOut]" required style="background: transparent;">
+        </div>
+      </div>
+      
+      <div class="p-2 bg-white">
+        <label for="guests" class="form-label text-uppercase fw-bold m-0" style="font-size: 0.65rem; color: #222;">Guests</label>
+        <input type="number" class="form-control border-0 p-0 shadow-none text-dark small mt-1" id="guests" name="booking[guests]" min="1" value="1" required style="background: transparent;">
+      </div>
+    </div>
+
+    <button type="submit" class="btn w-100 text-white fw-bold py-2.5 rounded-3 border-0 mt-2" 
+            style="background: linear-gradient(to right, #e61e4d 0%, #e31c5f 50%, #d70466 100%);">
+      Book &amp; pay
+    </button>
+  </form>
+
+  <p class="text-center text-muted small mt-3 mb-0" style="font-size: 0.75rem;">You'll pay securely with Razorpay on the next step</p>
+</div>

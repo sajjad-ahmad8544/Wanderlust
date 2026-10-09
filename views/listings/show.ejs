@@ -1,5 +1,4 @@
 <% layout("/layouts/boilerplate") %>
-<body>
 <div class="row mt-3">
     <div class="col-8 offset-3 ">
        <h3><%= listing.title %></h3>
@@ -7,7 +6,7 @@
     <div class="card col-6 offset-3 show-card listing-card">
     <img src="<%= listing.image.url %>" class="card-img-top show-img" alt="listing_image">
     <div class="card-body">
-    <p class="card-text">Owned by <i><%= listing.owner.username %></i></p>
+    <p class="card-text">Owned by <i><%= listing.owner ? listing.owner.username : "Unknown" %></i></p>
     <p class="card-text"><%= listing.description %></p>
     <p class="card-text"> &#8377;<%= listing.price.toLocaleString('en-IN') %></p>
     <p class="card-text"><%= listing.location %></p>
@@ -26,17 +25,12 @@ currUser.wishlist.some(
   method="POST"
   action="/wishlist/<%= listing._id %>?_method=<%= isWishlisted ? 'DELETE' : 'POST' %>"
 >
-
   <button
     class="btn mt-2 <%= isWishlisted ? 'btn-danger' : 'btn-outline-danger' %>"
   >
-
     <i class="fa-solid fa-heart"></i>
-
     <%= isWishlisted ? 'Wishlisted' : 'Add to Wishlist' %>
-
   </button>
-
 </form>
 
 <% } %>
@@ -46,7 +40,7 @@ currUser.wishlist.some(
     </div>
     <br/>
 
-    <% if(currUser && listing.owner._id.equals(currUser._id)) { %>
+    <% if(currUser && listing.owner && listing.owner._id.equals(currUser._id)) { %>
     <div class="btns">
     <a href="/listings/<%= listing._id %>/edit " class="btn btn-dark col-1 offset-3 edit-btn">Edit!</a>
     <form method="POST" action="/listings/<%= listing._id %>?_method=DELETE">
@@ -55,25 +49,47 @@ currUser.wishlist.some(
     </div>
     <% } %>
     <div class="col-8 offset-3 mb-3">
+      <%- include("../bookings/_form.ejs") %>
         <hr/>
+
+        <!-- MAP START -->
+        <% if (listing.geometry && listing.geometry.coordinates && listing.geometry.coordinates.length === 2) { %>
+          <h4 class="mt-3">Where you'll be</h4>
+          <div id="map" style="height: 350px; width: 100%; border-radius: 12px;"
+               data-token="<%= process.env.MAP_TOKEN %>"
+               data-lng="<%= listing.geometry.coordinates[0] %>"
+               data-lat="<%= listing.geometry.coordinates[1] %>"
+               data-title="<%= listing.title %>"
+               data-place="<%= listing.location %>, <%= listing.country %>"></div>
+          <script>
+            const m = document.getElementById("map").dataset;
+            mapboxgl.accessToken = m.token;
+            const center = [Number(m.lng), Number(m.lat)];
+            const map = new mapboxgl.Map({
+              container: "map",
+              style: "mapbox://styles/mapbox/streets-v12",
+              center: center,
+              zoom: 9,
+            });
+            map.addControl(new mapboxgl.NavigationControl());
+            new mapboxgl.Marker({ color: "#e31c5f" })
+              .setLngLat(center)
+              .setPopup(new mapboxgl.Popup({ offset: 25 }).setText(m.title + " - " + m.place))
+              .addTo(map);
+          </script>
+          <hr/>
+        <% } else { %>
+          <p class="text-muted small mt-3">Map not available for this listing yet.</p>
+          <hr/>
+        <% } %>
+        <!-- MAP END -->
+
         <% if(currUser) { %>
         <h4>Leave a Review</h4>
         <form action="/listings/<%=listing.id%>/reviews" method="POST" novalidate class="needs-validation">
-
-            
             <div class="mb-3 mt-3">
                 <label for="rating" class="form-label">Rating</label>
                 <fieldset class="starability-slot mb-2">
-    
-                  <input
-                    type="radio"
-                    id="no-rate"
-                    class="input-no-rate"
-                    name="review[rating]"
-                    value="0"
-                    checked
-                    aria-label="No rating"
-                  />
                   <input type="radio" id="no-rate" class="input-no-rate" name="review[rating]" value="1" checked aria-label="No rating." />
                   <input type="radio" id="first-rate1" name="review[rating]" value="1" />
                   <label for="first-rate1" title="Terrible">1 star</label>
@@ -100,21 +116,22 @@ currUser.wishlist.some(
         <% } %>
        <p><b>All Reviews</b></p>
        <div class="row">
-            <% for(review of listing.reviews) { %>
+            <% for(let review of listing.reviews) { %>
                 <div class="card col-5 ms-3 mb-3">
                     <div class="card-body">
-                        <h5 class="card-title">@<%= review.author.username %></h5>
+                        <h5 class="card-title">@<%= review.author ? review.author.username : "deleted user" %></h5>
                         <p class="starability-result card-text" data-rating="<%= review.rating %>">
                         </p>
                         <p class="card-text"><%= review.comment %></p>
-                        <!-- <p class="card-text"><%= review.rating %> stars</p> -->
-                        
+
+                        <% if (currUser && review.author && review.author._id.equals(currUser._id)) { %>
                         <form class="mb-3" method="POST"
                          action="/listings/<%= listing._id %>/reviews/<%= review._id %>?_method=DELETE">
                             <button class="btn btn-sm btn-dark">Delete</button>
                         </form>
+                        <% } %>
                     </div>
                 </div>
             <% } %>
             </div>
-</body>
+</div>

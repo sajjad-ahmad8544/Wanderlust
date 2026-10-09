@@ -1,0 +1,46 @@
+<% layout("/layouts/boilerplate") %>
+
+<h2 class="mb-1">Host Dashboard</h2>
+<p class="text-muted mb-4">Bookings made by guests on your listings</p>
+
+<% if (bookings.length === 0) { %>
+  <p>No one has booked your listings yet. <a href="/listings/new">Add a new listing</a> to start hosting.</p>
+<% } %>
+
+<div class="row">
+  <% bookings.forEach(booking => { %>
+    <% if (booking.listing && booking.user) { %>
+    <div class="col-md-6 mb-3">
+      <div class="card h-100">
+        <div class="card-body">
+          <h5 class="card-title"><%= booking.listing.title %></h5>
+          <p class="card-text mb-1">
+            <i class="fa-regular fa-user"></i>
+            Guest: <%= booking.user.username %>
+          </p>
+          <p class="card-text mb-1">
+            <%= booking.checkIn.toDateString() %> &rarr; <%= booking.checkOut.toDateString() %>
+          </p>
+          <p class="card-text mb-1">Guests: <%= booking.guests %></p>
+          <p class="card-text mb-1">Total: &#8377;<%= booking.totalPrice.toLocaleString("en-IN") %></p>
+          <p class="card-text mb-2">
+            Status:
+            <span class="badge bg-<%= booking.status === 'cancelled' ? 'secondary' : 'success' %>">
+              <%= booking.status %>
+            </span>
+          </p>
+
+          <a href="/listings/<%= booking.listing._id %>" class="btn btn-outline-primary btn-sm">View Listing</a>
+
+          <% if (booking.status !== 'cancelled') { %>
+          <form action="/host/bookings/<%= booking._id %>?_method=DELETE" method="POST" class="d-inline"
+                onsubmit="return confirm('Cancel this guest\'s booking?');">
+            <button class="btn btn-outline-danger btn-sm">Cancel Booking</button>
+          </form>
+          <% } %>
+        </div>
+      </div>
+    </div>
+    <% } %>
+  <% }) %>
+</div>

@@ -1,0 +1,131 @@
+<% layout("/layouts/boilerplate") %>
+
+<style>
+  #pay-btn { background: linear-gradient(to right, #e61e4d 0%, #e31c5f 50%, #d70466 100%); }
+</style>
+
+<div class="d-flex justify-content-center mt-5 mb-5">
+  <div class="card p-4 shadow border-0 rounded-4" style="max-width: 440px; width: 100%;">
+
+    <div class="d-flex justify-content-between align-items-center mb-3">
+      <h5 class="mb-0 fw-bold">Confirm &amp; Pay</h5>
+      <span class="badge bg-light text-muted border" style="font-size: 0.65rem;">
+        <i class="fa-solid fa-lock"></i> Secured by Razorpay
+      </span>
+    </div>
+
+    <div class="bg-light rounded-3 p-3 mb-3">
+      <p class="mb-1 fw-bold"><%= listing.title %></p>
+      <p class="mb-1 text-muted small"><%= listing.location %>, <%= listing.country %></p>
+      <hr class="my-2">
+      <div class="d-flex justify-content-between small text-muted">
+        <span>Check-in</span><span><%= checkIn %></span>
+      </div>
+      <div class="d-flex justify-content-between small text-muted">
+        <span>Check-out</span><span><%= checkOut %></span>
+      </div>
+      <div class="d-flex justify-content-between small text-muted mb-1">
+        <span>Guests</span><span><%= guests %></span>
+      </div>
+      <hr class="my-2">
+      <div class="d-flex justify-content-between fw-bold fs-5">
+        <span>Total</span><span>&#8377;<%= totalPrice.toLocaleString("en-IN") %></span>
+      </div>
+    </div>
+
+    <p id="pay-msg" class="small text-danger text-center mb-2" style="display:none;"></p>
+
+    <button id="pay-btn" type="button" class="btn w-100 text-white fw-bold py-2 rounded-3 border-0">
+      Pay &#8377;<%= totalPrice.toLocaleString("en-IN") %>
+    </button>
+    <button id="cancel-btn" type="button" class="btn btn-link w-100 text-muted mt-2">Cancel</button>
+
+    <p class="text-center text-muted mt-3 mb-0" style="font-size: 0.7rem;">
+      Pay securely using UPI, Cards, Net Banking or Wallets. Your dates are held for 15 minutes.
+    </p>
+
+    <!-- After a successful payment, these values are sent to the server for verification -->
+    <form id="verify-form" action="/payments/verify" method="POST" style="display:none;">
+      <input type="hidden" name="razorpay_order_id" id="f-order">
+      <input type="hidden" name="razorpay_payment_id" id="f-payment">
+      <input type="hidden" name="razorpay_signature" id="f-signature">
+    </form>
+  </div>
+</div>
+
+<!-- Data for the script (kept in data-attributes so it is HTML-escaped safely) -->
+<div id="rzp-data"
+     data-key="<%= razorpayKeyId %>"
+     data-order-id="<%= order.id %>"
+     data-amount="<%= order.amount %>"
+     data-currency="<%= order.currency %>"
+     data-name="<%= currUser ? currUser.username : '' %>"
+     data-email="<%= currUser ? currUser.email : '' %>"
+     data-listing-id="<%= listing._id %>"
+     data-listing-title="<%= listing.title %>"></div>
+
+<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+<script>
+  const d = document.getElementById("rzp-data").dataset;
+  const payBtn = document.getElementById("pay-btn");
+  const msg = document.getElementById("pay-msg");
+  let paid = false;
+
+  function showMsg(text) {
+    msg.textContent = text;
+    msg.style.display = "block";
+  }
+
+  function openCheckout() {
+    msg.style.display = "none";
+
+    const options = {
+      key: d.key,
+      amount: d.amount,          // in paise
+      currency: d.currency,
+      name: "Wanderlust",
+      description: d.listingTitle,
+      order_id: d.orderId,
+      prefill: { name: d.name, email: d.email },
+      theme: { color: "#e31c5f" },
+      handler: function (response) {
+        // Payment done on Razorpay's side -> send to our server to VERIFY
+        paid = true;
+        payBtn.disabled = true;
+        payBtn.textContent = "Confirming booking...";
+        document.getElementById("f-order").value = response.razorpay_order_id;
+        document.getElementById("f-payment").value = response.razorpay_payment_id;
+        document.getElementById("f-signature").value = response.razorpay_signature;
+        document.getElementById("verify-form").submit();
+      },
+      modal: {
+        ondismiss: function () {
+          if (!paid) showMsg("Payment not completed. Click Pay to try again.");
+        },
+      },
+    };
+
+    const rzp = new Razorpay(options);
+    rzp.on("payment.failed", function (response) {
+      showMsg("Payment failed: " + (response.error.description || "please try again."));
+    });
+    rzp.open();
+  }
+
+  payBtn.addEventListener("click", openCheckout);
+
+  // Cancel -> release the held dates, go back to the listing
+  document.getElementById("cancel-btn").addEventListener("click", async function () {
+    try {
+      await fetch("/payments/cancel", {
+        method: "POST",
+        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        body: new URLSearchParams({ orderId: d.orderId }),
+      });
+    } catch (e) {}
+    window.location.href = "/listings/" + d.listingId;
+  });
+
+  // Open the Razorpay popup automatically
+  window.addEventListener("load", openCheckout);
+</script>
