@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta http-equiv="refresh" content="10" />
+    <title>WanderLust is starting</title>
+    <style>
+      :root { color-scheme: light; font-family: system-ui, sans-serif; color: #222; background: #f7f7f7; }
+      body { min-height: 100vh; margin: 0; display: grid; place-items: center; }
+      main { box-sizing: border-box; width: min(92vw, 620px); padding: 2rem; border-radius: 16px; background: white; box-shadow: 0 8px 32px #00000012; }
+      h1 { margin-top: 0; }
+      .status { padding: 1rem; border-left: 4px solid #e76f51; background: #fff4ef; }
+      code { overflow-wrap: anywhere; }
+      ul { padding-left: 1.2rem; line-height: 1.6; }
+    </style>
+  </head>
+  <body>
+    <main>
+      <h1>WanderLust server is running</h1>
+      <p class="status"><strong>Database not connected yet.</strong><br /><code>__DB_ERROR__</code></p>
+      <p>Listings and accounts need MongoDB Atlas. Please check:</p>
+      <ul>
+        <li>Internet is on.</li>
+        <li>Atlas cluster is active (not paused).</li>
+        <li>Atlas &rarr; <strong>Network Access</strong>: your current IP is allowed (for development you can allow <code>0.0.0.0/0</code>).</li>
+        <li>Username and password in <code>ATLASDB_URL</code> (.env) are correct.</li>
+      </ul>
+      <p>The server keeps retrying on its own and this page refreshes every 10 seconds. No restart is needed once the database is reachable.</p>
+    </main>
+  </body>
+</html>
